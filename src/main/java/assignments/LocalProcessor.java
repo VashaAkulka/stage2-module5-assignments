@@ -2,9 +2,10 @@ package assignments;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import assignments.annotations.FullNameProcessorGeneratorAnnotation;
 import assignments.annotations.ListIteratorAnnotation;
@@ -15,20 +16,18 @@ import lombok.Setter;
 @Getter
 @Setter
 public class LocalProcessor {
-    private StringBuilder  processorName;
+    private StringBuilder processorName;
     private Long period = 10_000_000_000_000L;
     protected StringBuilder processorVersion;
     private Integer valueOfCheap;
-    private Scanner informationscanner;
-    private List<String> stringArrayList = new LinkedList<>();
+    private Scanner informationScanner;
+    private List<String> stringArrayList;
 
-    public LocalProcessor(String processorName, Long period, String processorVersion, Integer valueOfCheap,
-                          Scanner informationscanner, LinkedList<String> stringArrayList) {
+    public LocalProcessor(String processorName, String processorVersion,
+                          Integer valueOfCheap, List<String> stringArrayList) {
         this.processorName.append(processorName);
-        this.period = period;
         this.processorVersion.append(processorVersion);
         this.valueOfCheap = valueOfCheap;
-        this.informationscanner = informationscanner;
         this.stringArrayList = stringArrayList;
     }
 
@@ -37,28 +36,31 @@ public class LocalProcessor {
 
     @ListIteratorAnnotation
     public void listIterator(List<String> stringList) {
-        stringArrayList = new LinkedList<>(stringList);
-        for (String str : stringList) {
-            System.out.println(str.hashCode());
-        }
+        stringList.stream()
+                .filter(Objects::nonNull)
+                .map(Objects::hashCode)
+                .forEach(System.out::println);
     }
 
     @FullNameProcessorGeneratorAnnotation
     public String fullNameProcessorGenerator(List<String> stringList) {
-        for (String str : stringList) {
-            processorName.append(str).append(' ');
-        }
-        return processorName.toString();
+        return stringList.stream()
+                .filter(Objects::nonNull)
+                .peek(s -> processorName.append(s))
+                .collect(Collectors.joining());
     }
 
     @ReadFullProcessorNameAnnotation
     public void readFullProcessorName(File file) {
-        try(Scanner informationScanner = new Scanner(file)) {
-            while (informationScanner.hasNext()) {
-                processorVersion.append(informationScanner.nextLine());
+        try {
+            this.informationScanner = new Scanner(file);
+            while (this.informationScanner.hasNext()) {
+                this.processorVersion.append(this.informationScanner.nextLine());
             }
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
+        } finally {
+            this.informationScanner.close();
         }
     }
 }
